@@ -94,6 +94,25 @@ class MainActivity : Activity() {
         root.addView(row(card("VOLTAGE", tVolt), card("TEMPERATURE", tTemp)))
         root.addView(row(card("POWER", tPower), card("SOURCE", tPlug)))
 
+        val prefs = getSharedPreferences("ampere", MODE_PRIVATE)
+        if (Build.VERSION.SDK_INT >= 33)
+            requestPermissions(arrayOf("android.permission.POST_NOTIFICATIONS"), 1)
+        val btn = Button(this)
+        val svc = Intent(this, MonitorService::class.java)
+        fun sync() {
+            val on = prefs.getBoolean("on", true)
+            btn.text = if (on) "Lock screen notification: ON" else "Lock screen notification: OFF"
+            if (on) startForegroundService(svc) else stopService(svc)
+        }
+        btn.setOnClickListener {
+            prefs.edit().putBoolean("on", !prefs.getBoolean("on", true)).apply()
+            sync()
+        }
+        root.addView(btn, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { topMargin = dp(16) })
+        sync()
+
         setContentView(ScrollView(this).apply {
             setBackgroundColor(bg); addView(root)
         })
