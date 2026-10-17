@@ -1,6 +1,9 @@
 package com.me.ampere
 
 import android.app.Activity
+import android.app.AlertDialog
+import android.text.method.LinkMovementMethod
+import android.text.util.Linkify
 import android.content.*
 import android.graphics.*
 import android.graphics.drawable.GradientDrawable
@@ -111,6 +114,11 @@ class MainActivity : Activity() {
         root.addView(btn, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply { topMargin = dp(16) })
+        val about = Button(this).apply { text = "About Developer" }
+        about.setOnClickListener { showAbout() }
+        root.addView(about, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { topMargin = dp(8) })
         sync()
 
         setContentView(ScrollView(this).apply {
@@ -138,9 +146,9 @@ class MainActivity : Activity() {
                 win.clear(); ema = Float.NaN; lastCharging = charging
             }
             win.add(raw)
-            if (win.size > 7) win.removeAt(0)
+            if (win.size > 15) win.removeAt(0)
             val med = win.sorted()[win.size / 2]          // spike filter
-            ema = if (ema.isNaN()) med else ema + 0.2f * (med - ema)  // smoothing
+            ema = if (ema.isNaN()) med else ema + 0.15f * (med - ema)  // smoothing
 
             val volts = mv / 1000f
             val watts = volts * abs(ema) / 1000f
@@ -158,8 +166,45 @@ class MainActivity : Activity() {
             tTemp.text = "%.1f °C".format(temp)
             tPower.text = "%.1f W".format(watts)
             tPlug.text = plug
-            h.postDelayed(this, 500)
+            h.postDelayed(this, 250)
         }
+    }
+
+    private fun showAbout() {
+        val tv = TextView(this).apply {
+            text = """Name: Sarfraz Qureshi
+
+Location: Naushehro Feroz, Sindh, Pakistan
+
+Email: ahmedsarfraz650@gmail.com
+
+WhatsApp: +92 304 3478576
+
+GitHub: Ibneilyas124
+https://github.com/Ibneilyas124
+
+Skills & Expertise
+
+- Arduino & Embedded Systems
+- IoT & Wi-Fi Projects
+- Circuit Design & Soldering
+- Programming & Troubleshooting
+- Hardware and Software Integration
+- Cybersecurity
+
+“Real happiness is building something with your own hands.”"""
+            textSize = 14f
+            setTextColor(Color.WHITE)
+            setLinkTextColor(Color.parseColor("#00E5A0"))
+            setPadding(dp(24), dp(16), dp(24), dp(8))
+            Linkify.addLinks(this, Linkify.ALL)
+            movementMethod = LinkMovementMethod.getInstance()
+        }
+        AlertDialog.Builder(this, AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+            .setTitle("About Developer")
+            .setView(ScrollView(this).apply { addView(tv) })
+            .setPositiveButton("Close", null)
+            .show()
     }
 
     override fun onResume() { super.onResume(); h.post(tick) }

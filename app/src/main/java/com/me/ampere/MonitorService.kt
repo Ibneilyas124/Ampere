@@ -10,6 +10,7 @@ class MonitorService : Service() {
     private val win = ArrayList<Float>()
     private var ema = Float.NaN
     private var last: Boolean? = null
+    private var n = 0
     private lateinit var nm: NotificationManager
 
     override fun onBind(i: Intent?): IBinder? = null
@@ -62,9 +63,9 @@ class MonitorService : Service() {
 
             if (last != charging) { win.clear(); ema = Float.NaN; last = charging }
             win.add(raw)
-            if (win.size > 7) win.removeAt(0)
+            if (win.size > 15) win.removeAt(0)
             val med = win.sorted()[win.size / 2]
-            ema = if (ema.isNaN()) med else ema + 0.2f * (med - ema)
+            ema = if (ema.isNaN()) med else ema + 0.15f * (med - ema)
 
             val v = mv / 1000f
             val w = v * abs(ema) / 1000f
@@ -72,8 +73,8 @@ class MonitorService : Service() {
             val title = (if (charging) "Charging  " else "Discharging  ") +
                     sign + ema.toInt() + " mA"
             val text = "%.2f V  |  %.1f W  |  %d%%  |  %.1f°C".format(v, w, pct, temp)
-            nm.notify(1, build(title, text))
-            h.postDelayed(this, 1000)
+            if (++n % 4 == 0) nm.notify(1, build(title, text))
+            h.postDelayed(this, 250)
         }
     }
 }
